@@ -56,6 +56,11 @@
 #define INT_USER_PREFIX      "user" INT_HIERSEP_STR
 #define INT_USER_PREFIX_LEN  5
 
+#define INT_HIERSEP_STR      "\x1f"
+#define INT_HIERSEP_CHAR     INT_HIERSEP_STR[0]
+#define INT_USER_PREFIX      "user" INT_HIERSEP_STR
+#define INT_USER_PREFIX_LEN  5
+
 /* list of our namespaces */
 enum { NAMESPACE_INBOX = 0,
        NAMESPACE_USER = 1,
