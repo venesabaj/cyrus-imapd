@@ -7740,12 +7740,12 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
     nmlen = strlen(newmailboxname);
     if (omlen < nmlen) {
         if (!strncmp(oldmailboxname, newmailboxname, omlen) &&
-            newmailboxname[omlen] == '.') {
+            newmailboxname[omlen] == INT_HIERSEP_CHAR) {
             recursive_rename = 0;
         }
     } else {
         if (!strncmp(oldmailboxname, newmailboxname, nmlen) &&
-            oldmailboxname[nmlen] == '.') {
+            oldmailboxname[nmlen] == INT_HIERSEP_CHAR) {
             recursive_rename = 0;
         }
     }
@@ -7762,8 +7762,8 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
 
         strcpy(ombn, oldmailboxname);
         strcpy(nmbn, newmailboxname);
-        strcat(ombn, ".");
-        strcat(nmbn, ".");
+        strcat(ombn, INT_HIERSEP_STR);
+        strcat(nmbn, INT_HIERSEP_STR);
 
         /* setup the rock */
         rock.namespace = &imapd_namespace;
@@ -7850,8 +7850,8 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
         prot_flush(imapd_out);
 
 submboxes:
-        strcat(oldmailboxname, ".");
-        strcat(newmailboxname, ".");
+        strcat(oldmailboxname, INT_HIERSEP_STR);
+        strcat(newmailboxname, INT_HIERSEP_STR);
 
         /* setup the rock */
         rock.namespace = &imapd_namespace;
@@ -13068,7 +13068,7 @@ static void _addsubs(struct list_rock *rock)
             else
                 rock->last_attributes |= MBOX_ATTRIBUTE_SUBSCRIBED;
         }
-        else if (name[namelen] == '.')
+        else if (name[namelen] == INT_HIERSEP_CHAR)
             rock->last_attributes |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
     }
 }
