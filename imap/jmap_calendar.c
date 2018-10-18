@@ -2034,7 +2034,8 @@ gotevent:
     }
     if (jmap_wantprop(rock->get->props, "calendarId")) {
         json_object_set_new(jsevent, "calendarId",
-                            json_string(strrchr(cdata->dav.mailbox, '.')+1));
+                            json_string(strrchr(cdata->dav.mailbox,
+                                                INT_HIERSEP_CHAR)+1));
     }
     if (jmap_wantprop(rock->get->props, "blobId")) {
         json_t *jblobid = json_null();
