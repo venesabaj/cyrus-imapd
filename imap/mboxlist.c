@@ -285,6 +285,12 @@ static void mboxlist_name_from_key(const char *key, size_t len, struct buf *name
     buf_init_ro(name, key+1, len-1);
 }
 
+static void mboxlist_id_to_key(const char *id, struct buf *key)
+{
+    buf_setcstr(key, "I");
+    buf_appendcstr(key, id);
+}
+
 /*
  * read a single record from the mailboxes.db and return a pointer to it
  */
@@ -792,36 +798,27 @@ static int mboxlist_update_racl(const char *name, const mbentry_t *oldmbentry, c
     return r;
 }
 
-static int mboxlist_update_entry(const char *name, const mbentry_t *mbentry, struct txn **txn)
+static int mboxlist_update_name(const char *name,
+                                const mbentry_t *mbentry, struct txn **txn)
 {
     struct buf key = BUF_INITIALIZER;
     mbentry_t *old = NULL;
     int r = 0;
 
-    mboxlist_mylookup(name, &old, txn, 0); // ignore errors, it will be NULL
+    mboxlist_name_to_key(name, strlen(name), &key);
+
+    mboxlist_mylookup(buf_cstring(&key), &old, txn, 0); // ignore errors, it will be NULL
 
     if (have_racl) {
         r = mboxlist_update_racl(name, old, mbentry, txn);
         if (r) goto done;
     }
 
-    mboxlist_name_to_key(name, strlen(name), &key);
-
     if (mbentry) {
         char *mboxent = mboxlist_entry_cstring(mbentry);
         r = cyrusdb_store(mbdb, buf_base(&key), buf_len(&key),
                           mboxent, strlen(mboxent), txn);
         free(mboxent);
-
-        if (!r && config_auditlog) {
-            /* XXX is there a difference between "" and NULL? */
-            syslog(LOG_NOTICE, "auditlog: acl sessionid=<%s> "
-                               "mailbox=<%s> uniqueid=<%s> mbtype=<%s> "
-                               "oldacl=<%s> acl=<%s> foldermodseq=<%llu>",
-                   session_id(),
-                   name, mbentry->uniqueid, mboxlist_mbtype_to_string(mbentry->mbtype),
-                   old ? old->acl : "NONE", mbentry->acl, mbentry->foldermodseq);
-        }
     }
     else {
         r = cyrusdb_delete(mbdb, buf_base(&key), buf_len(&key),
@@ -829,8 +826,67 @@ static int mboxlist_update_entry(const char *name, const mbentry_t *mbentry, str
     }
 
  done:
-    mboxlist_entry_free(&old);
     buf_free(&key);
+    return r;
+}
+
+static int mboxlist_update_id(const char *id,
+                              const char *name, struct txn **txn)
+{
+    struct buf key = BUF_INITIALIZER;
+    int r;
+
+    mboxlist_id_to_key(id, &key);
+
+    if (name) {
+        r = cyrusdb_store(mbdb, buf_base(&key), buf_len(&key),
+                          name, strlen(name), txn);
+    }
+    else {
+        r = cyrusdb_delete(mbdb, buf_base(&key), buf_len(&key),
+                           txn, /*force*/1);
+    }
+
+    buf_free(&key);
+    return r;
+}
+
+static int mboxlist_update_entry(const char *name,
+                                 const mbentry_t *mbentry, struct txn **txn)
+{
+    mbentry_t *old = NULL;
+    int r = 0;
+
+    mboxlist_mylookup(name, &old, txn, 0); // ignore errors, it will be NULL
+
+    if (!cyrusdb_fetch(mbdb, "$RACL", 5, NULL, NULL, txn)) {
+        r = mboxlist_update_racl(name, old, mbentry, txn);
+        /* XXX return value here is discarded? */
+    }
+
+    r = mboxlist_update_name(name, mbentry, txn);
+    if (!r) {
+        if (mbentry) {
+            r = mboxlist_update_id(mbentry->uniqueid, name, txn);
+
+            if (!r && config_auditlog) {
+                /* XXX is there a difference between "" and NULL? */
+                if (old && strcmpsafe(old->acl, mbentry->acl)) {
+                    syslog(LOG_NOTICE, "auditlog: acl sessionid=<%s> "
+                                       "mailbox=<%s> uniqueid=<%s> "
+                                       "oldacl=<%s> acl=<%s>",
+                           session_id(),
+                           name, mbentry->uniqueid,
+                           old->acl, mbentry->acl);
+                }
+            }
+        }
+        else {
+            r = mboxlist_update_id(old->uniqueid, NULL, txn);
+        }
+    }
+
+    mboxlist_entry_free(&old);
     return r;
 }
 
