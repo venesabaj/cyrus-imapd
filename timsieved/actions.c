@@ -65,6 +65,7 @@
 #include "imap/global.h"
 #include "imap/sync_log.h"
 #include "imap/tls.h"
+#include "imap/user.h"
 #include "imap/version.h"
 #include "sieve/sieve_interface.h"
 #include "timsieved/actions.h"
@@ -100,33 +101,26 @@ int actions_init(void)
 
 int actions_setuser(const char *userid)
 {
-  char *user, *domain = NULL;
   struct buf buf = BUF_INITIALIZER;
   int result, ret = TIMSIEVE_OK;
 
-  sieved_userid = user = xstrdup(userid);
-  if (config_virtdomains) {
-      /* split the user and domain */
-      if ((domain = strrchr(user, '@'))) *domain++ = '\0';
-  }
-
-  buf_setcstr(&buf, sieve_dir_config);
-
-  if (domain) {
-      char dhash = (char) dir_hash_c(domain, config_fulldirhash);
-      buf_printf(&buf, "%s%c/%s", FNAME_DOMAINDIR, dhash, domain);
-  }
+  sieved_userid = xstrdup(userid);
 
   if (sieved_userisadmin) {
+      char *domain = NULL;
+
+      buf_setcstr(&buf, sieve_dir_config);
+
+      if (config_virtdomains && (domain = strrchr(userid, '@'))) {
+          char dhash = (char) dir_hash_c(++domain, config_fulldirhash);
+          buf_printf(&buf, "%s%c/%s", FNAME_DOMAINDIR, dhash, domain);
+      }
+
       buf_appendcstr(&buf, "/global");
   }
   else {
-      char hash = (char) dir_hash_c(user, config_fulldirhash);
-      buf_printf(&buf, "/%c/%s", hash, user);
+      buf_setcstr(&buf, user_sieve_path(userid);
   }
-
-  /* rejoin user and domain */
-  if (domain) domain[-1] = '@';
 
   const char *sieve_dir = buf_cstring(&buf);
   result = chdir(sieve_dir);
