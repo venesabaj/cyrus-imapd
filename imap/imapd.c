@@ -12077,13 +12077,19 @@ static void cmd_xfer(const char *tag, const char *name,
         mboxlist_findall(NULL, "*", 1, NULL, NULL, xfer_addmbox, &list);
     } else {
         /* mailbox pattern */
+        mbname_t *mbname =
+            mbname_from_extname(name, &imapd_namespace, imapd_userid);
+
         if (mbname_localpart(mbname) &&
             (mbname_isdeleted(mbname) || strarray_size(mbname_boxes(mbname)))) {
             /* targeted a user submailbox */
             list.allow_usersubs = 1;
         }
 
-        mboxlist_findall(NULL, mbname_intname(mbname), 1, NULL, NULL, xfer_addmbox, &list);
+        /* NOTE: Since XFER can only be used by an admin,
+         * 'name' is the external name to be used for findall.
+         */
+        mboxlist_findall(NULL, name, 1, NULL, NULL, xfer_addmbox, &list);
     }
 
     r = xfer_init(toserver, &xfer);
