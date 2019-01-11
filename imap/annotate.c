@@ -2789,7 +2789,8 @@ EXPORTED int annotatemore_msg_lookup(const struct mailbox *mailbox,
                                      uint32_t uid, const char *entry,
                                      const char *userid, struct buf *value)
 {
-    return _annotate_lookup(mailbox->name, mailbox->uniqueid,
+    return _annotate_lookup(mailbox ? mailbox->name : "",
+                            mailbox ? mailbox->uniqueid : NULL,
                             uid, entry, userid, value);
 }
 
@@ -2797,7 +2798,8 @@ EXPORTED int annotatemore_msg_lookupmask(const struct mailbox *mailbox,
                                          uint32_t uid, const char *entry,
                                          const char *userid, struct buf *value)
 {
-    return _annotate_lookupmask(mailbox->name, mailbox->uniqueid,
+    return _annotate_lookupmask(mailbox ? mailbox->name : "",
+                                mailbox ? mailbox->uniqueid : NULL,
                                 uid, entry, userid, value);
 }
 
