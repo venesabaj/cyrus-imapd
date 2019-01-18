@@ -2365,6 +2365,17 @@ redo:
     mailbox_close(&mailbox);
 }
 
+static int dlist_getname_internal(struct dlist *parent, const char *name,
+                                  char **mboxnamep)
+{
+    const char *stdname;
+
+    if (!dlist_getatom(parent, name, &stdname)) return 0;
+
+    *mboxnamep = mboxname_from_standard(stdname);
+    return 1;
+}
+
 int sync_apply_reserve(struct dlist *kl,
                        struct sync_reserve_list *reserve_list,
                        struct sync_state *sstate)
@@ -3863,7 +3874,6 @@ int sync_restore_mailbox(struct dlist *kin,
     struct dlist *ki;
     int has_append = 0;
     int is_new_mailbox = 0;
-    char *intname;
     int r;
 
     if (!dlist_getname_internal(kin, "MBOXNAME", &mboxname)) {
@@ -3903,8 +3913,7 @@ int sync_restore_mailbox(struct dlist *kin,
      */
 
     /* open/create mailbox */
-    intname = mboxname_from_standard(mboxname);
-    r = mailbox_open_iwl(intname, &mailbox);
+    r = mailbox_open_iwl(mboxname, &mailbox);
     if (!r) r = sync_mailbox_version_check(&mailbox);
     syslog(LOG_DEBUG, "%s: mailbox_open_iwl %s: %s",
            __func__, mboxname, error_message(r));
@@ -3927,7 +3936,7 @@ int sync_restore_mailbox(struct dlist *kin,
         r = mailbox_open_iwl(mboxname, &mailbox);
         if (!r) r = sync_mailbox_version_check(&mailbox);
         if (r == IMAP_MAILBOX_NONEXISTENT) { // did we win a race?
-            r = mboxlist_createsync(intname, mbtype, partition,
+            r = mboxlist_createsync(mboxname, mbtype, partition,
                                     sstate->userid, sstate->authstate,
                                     options, uidvalidity, createdmodseq,
                                     highestmodseq, foldermodseq, acl,
@@ -3938,7 +3947,6 @@ int sync_restore_mailbox(struct dlist *kin,
         }
         mboxname_release(&namespacelock);
     }
-    free(intname);
     if (r) {
         syslog(LOG_ERR, "Failed to open mailbox %s to restore: %s",
                mboxname, error_message(r));
