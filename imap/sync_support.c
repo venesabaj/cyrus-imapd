@@ -3322,6 +3322,7 @@ int sync_apply_unmailbox(struct dlist *kin, struct sync_state *sstate)
                                         /*silent*/1);
 
     mboxname_release(&namespacelock);
+    free(mboxname);
 
     return r;
 }
