@@ -2365,17 +2365,6 @@ redo:
     mailbox_close(&mailbox);
 }
 
-static int dlist_getname_internal(struct dlist *parent, const char *name,
-                                  char **mboxnamep)
-{
-    const char *stdname;
-
-    if (!dlist_getatom(parent, name, &stdname)) return 0;
-
-    *mboxnamep = mboxname_from_standard(stdname);
-    return 1;
-}
-
 int sync_apply_reserve(struct dlist *kl,
                        struct sync_reserve_list *reserve_list,
                        struct sync_state *sstate)
@@ -6463,7 +6452,7 @@ int sync_do_user(const char *userid, const char *topart,
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "USER %s", userid);
 
-    kl = dlist_setatom(NULL, "USER", userid);
+    kl = dlist_setname_standard(NULL, "USER", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 
@@ -6527,7 +6516,7 @@ int sync_do_meta(const char *userid, struct backend *sync_be, unsigned flags)
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "META %s", userid);
 
-    kl = dlist_setatom(NULL, "META", userid);
+    kl = dlist_setname_standard(NULL, "META", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 

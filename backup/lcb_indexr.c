@@ -581,7 +581,7 @@ EXPORTED struct dlist *backup_mailbox_to_dlist(
     struct dlist *dl = dlist_newkvlist(NULL, "MAILBOX");
 
     dlist_setatom(dl, "UNIQUEID", mailbox->uniqueid);
-    dlist_setatom(dl, "MBOXNAME", mailbox->mboxname);
+    dlist_setname_standard(dl, "MBOXNAME", mailbox->mboxname);
     dlist_setatom(dl, "MBOXTYPE", mailbox->mboxtype);
     dlist_setnum32(dl, "LAST_UID", mailbox->last_uid);
     dlist_setnum64(dl, "HIGHESTMODSEQ", mailbox->highestmodseq);
