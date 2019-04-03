@@ -1344,6 +1344,7 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
 {
     mbentry_t *mbentry = NULL;
     mbname_t *mbname = mbname_from_intname(frommboxname);
+    char *partition = NULL;
     int r = 0;
 
     /* only use intermediates for non-deleted user mailboxes */
@@ -1412,8 +1413,15 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
                                          mbentry ? mbentry->foldermodseq : 0,
                                          mbtype, 1 /* dofolder */);
 
+        if (!partition) {
+            mboxlist_entry_free(&mbentry);
+            mboxlist_findparent(mboxname, &mbentry);
+            partition = xstrdupnull(mbentry->partition);
+        }
+
         mbentry_t *newmbentry = mboxlist_entry_create();
         newmbentry->uniqueid = xstrdupnull(makeuuid());
+        newmbentry->partition = xstrdupnull(partition);
         newmbentry->createdmodseq = modseq;
         newmbentry->foldermodseq = modseq;
         newmbentry->mbtype |= MBTYPE_INTERMEDIATE;
@@ -1423,6 +1431,14 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
                "mboxlist: creating intermediate with children: %s (%s)",
                mbname_stdname(mbname), newmbentry->uniqueid);
         r = mboxlist_update_entry(mboxname, newmbentry, NULL);
+        if (!r) {
+            const char *path = mboxname_datapath(newmbentry->partition, mboxname,
+                                                 newmbentry->uniqueid, 1);
+            if (path) cyrus_mkdir(path, 0755);
+            path = mboxname_metapath(newmbentry->partition, mboxname,
+                                     newmbentry->uniqueid, META_HEADER, 0);
+            if (path) cyrus_mkdir(path, 0755);
+        }
         mboxlist_entry_free(&newmbentry);
         if (r) goto out;
         sync_log_mailbox(mboxname);
@@ -1431,6 +1447,7 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
 out:
     mboxlist_entry_free(&mbentry);
     mbname_free(&mbname);
+    free(partition);
 
     return r;
 }
