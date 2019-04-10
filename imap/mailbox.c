@@ -1003,6 +1003,7 @@ static int mailbox_open_advanced(const char *name,
     mailbox->acl = xstrdup(mbentry->acl);
     mailbox->mbtype = mbentry->mbtype;
     mailbox->foldermodseq = mbentry->foldermodseq;
+    mailbox->legacy_dir = mbentry->legacy_dir;
 
     mboxlist_entry_free(&mbentry);
 
