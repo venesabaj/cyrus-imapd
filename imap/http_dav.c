@@ -999,7 +999,7 @@ static int eval_if(const char *hdr, struct meth_params *params,
 
                                 /* Find message UID for the resource */
                                 params->davdb.lookup_resource(davdb,
-                                                              mailbox->uniqueid,
+                                                              DAV_KEY_MBOX(mailbox),
                                                               tag_tgt.resource,
                                                               (void **) &ddata,
                                                               0);
@@ -4667,7 +4667,7 @@ int meth_copy_move(struct transaction_t *txn, void *params)
     src_davdb = cparams->davdb.open_db(src_mbox);
 
     /* Find message UID for the source resource */
-    cparams->davdb.lookup_resource(src_davdb, txn->req_tgt.mbentry->uniqueid,
+    cparams->davdb.lookup_resource(src_davdb, DAV_KEY_MBOX(src_mbox),
                                    txn->req_tgt.resource,
                                    (void **) &ddata, 0);
     if (!ddata->rowid) {
@@ -4742,7 +4742,7 @@ int meth_copy_move(struct transaction_t *txn, void *params)
     }
 
     /* Find message UID for the dest resource, if exists */
-    cparams->davdb.lookup_resource(dest_davdb, dest_tgt.mbentry->uniqueid,
+    cparams->davdb.lookup_resource(dest_davdb, DAV_KEY_MBOX(dest_mbox),
                                    dest_tgt.resource, (void **) &ddata, 0);
     /* XXX  Check errors */
 
@@ -4993,7 +4993,7 @@ static int meth_delete_collection(struct transaction_t *txn,
         void *davdb = dparams->davdb.open_db(mailbox);
 
         drock.mailbox = mailbox;
-        r = dparams->davdb.foreach_resource(davdb, mailbox->uniqueid,
+        r = dparams->davdb.foreach_resource(davdb, DAV_KEY_MBOX(mailbox),
                                             &delete_cb, &drock);
         dparams->davdb.close_db(davdb);
 
@@ -5095,7 +5095,7 @@ static int meth_delete_resource(struct transaction_t *txn,
     davdb = dparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource, if exists */
-    dparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    dparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
@@ -5272,7 +5272,7 @@ int meth_get_head(struct transaction_t *txn, void *params)
     davdb = gparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource */
-    gparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    gparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
@@ -5453,7 +5453,7 @@ int meth_lock(struct transaction_t *txn, void *params)
     lparams->davdb.begin_transaction(davdb);
 
     /* Find message UID for the resource, if exists */
-    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    lparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void *) &ddata, 1);
 
     /* Fetch resource validators */
@@ -5902,7 +5902,7 @@ static int propfind_by_resources(struct propfind_ctx *fctx)
         struct dav_data *ddata;
 
         /* Find message UID for the resource */
-        fctx->lookup_resource(fctx->davdb, fctx->mailbox->uniqueid,
+        fctx->lookup_resource(fctx->davdb, DAV_KEY_MBOX(fctx->mailbox),
                               fctx->req_tgt->resource, (void **) &ddata, 0);
         if (!ddata->rowid) {
             /* Add response for missing target */
@@ -5913,7 +5913,7 @@ static int propfind_by_resources(struct propfind_ctx *fctx)
     }
     else {
         /* Add responses for all contained resources */
-        fctx->foreach_resource(fctx->davdb, fctx->mailbox->uniqueid,
+        fctx->foreach_resource(fctx->davdb, DAV_KEY_MBOX(fctx->mailbox),
                                fctx->proc_by_resource, fctx);
 
         /* Started with NULL resource, end with NULL resource */
@@ -6545,7 +6545,7 @@ int meth_proppatch(struct transaction_t *txn, void *params)
         davdb = pparams->davdb.open_db(mailbox);
 
         /* Find message UID for the resource */
-        pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+        pparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                        txn->req_tgt.resource, (void **) &ddata, 0);
         if (!ddata->imap_uid) {
             ret = HTTP_NOT_FOUND;
@@ -6918,7 +6918,7 @@ int meth_patch(struct transaction_t *txn, void *params)
     davdb = pparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource */
-    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    pparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void *) &ddata, 0);
     if (!ddata->imap_uid) {
         ret = HTTP_NOT_FOUND;
@@ -7173,7 +7173,7 @@ int meth_put(struct transaction_t *txn, void *params)
     davdb = pparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource, if exists */
-    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    pparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void *) &ddata, 0);
     /* XXX  Check errors */
 
@@ -7392,7 +7392,7 @@ int report_multiget(struct transaction_t *txn, struct meth_params *rparams,
             fctx->davdb = rparams->davdb.open_db(fctx->mailbox);
 
             /* Find message UID for the resource */
-            rparams->davdb.lookup_resource(fctx->davdb, tgt.mbentry->uniqueid,
+            rparams->davdb.lookup_resource(fctx->davdb, DAV_KEY_MBOX(fctx->mailbox),
                                            tgt.resource, (void **) &ddata, 0);
             ddata->resource = tgt.resource;
             /* XXX  Check errors */
@@ -7614,7 +7614,7 @@ int report_sync_col(struct transaction_t *txn, struct meth_params *rparams,
     struct updates_rock rock = { fctx, rparams->get_modseq, limit,
                                  syncmodseq, basemodseq, &respmodseq, &nresp };
 
-    r = rparams->davdb.foreach_update(fctx->davdb, syncmodseq, mailbox->uniqueid,
+    r = rparams->davdb.foreach_update(fctx->davdb, syncmodseq, DAV_KEY_MBOX(mailbox),
                                       -1 /* ALL kinds of resources */,
                                       (syncmodseq && basemodseq) ? 0 : limit + 1,
                                       &updates_cb, &rock);
@@ -8355,7 +8355,7 @@ int meth_unlock(struct transaction_t *txn, void *params)
     lparams->davdb.begin_transaction(davdb);
 
     /* Find message UID for the resource, if exists */
-    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->uniqueid,
+    lparams->davdb.lookup_resource(davdb, DAV_KEY_MBOX(mailbox),
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
