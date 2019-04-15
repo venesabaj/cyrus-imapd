@@ -3224,3 +3224,17 @@ EXPORTED void jmap_mbentry_cache_free(jmap_req_t *req)
         req->mbentry_byid = NULL;
     }
 }
+
+EXPORTED mbentry_t *jmap_mbentry_from_dav(jmap_req_t *req, struct dav_data *dav)
+{
+    mbentry_t *mbentry = NULL;
+
+    if (dav->mailbox_byname) {
+        if (jmap_mboxlist_lookup(dav->mailbox, &mbentry, NULL)) return NULL;
+    }
+    else {
+        mbentry = jmap_mbentry_by_uniqueid_copy(req, dav->mailbox);
+    }
+
+    return mbentry;
+}
