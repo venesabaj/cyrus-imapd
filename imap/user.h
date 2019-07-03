@@ -80,6 +80,9 @@ char *user_hash_subs(const char *user);
 /* find any sort of file for the user */
 char *user_hash_meta(const char *userid, const char *suffix);
 
+/* find xapian search dir for the user */
+char *user_hash_xapian(const char *userid, const char *root);
+
 struct mboxlock *user_namespacelock(const char *userid);
 int user_isnamespacelocked(const char *userid);
 
