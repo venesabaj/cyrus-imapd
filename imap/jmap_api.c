@@ -1349,23 +1349,26 @@ static int findblob_exact_cb(const conv_guidrec_t *rec, void *rock)
     if (d->is_shared_account) {
         int rights = jmap_myrights_mbentry(req, mbentry);
         if ((rights & JACL_READITEMS) != JACL_READITEMS) {
-            mboxlist_entry_free(&mbentry);
-            return 0;
+            r = 0;
+            goto done;
         }
     }
 
     r = jmap_openmbox(req, mbentry->name, &d->mbox, 0);
-    mboxlist_entry_free(&mbentry);
-    if (r) return r;
+    if (r) goto done;
 
     r = msgrecord_find(d->mbox, rec->uid, &d->mr);
     if (r) {
         jmap_closembox(req, &d->mbox);
         d->mr = NULL;
-        return r;
+        goto done;
     }
 
-    return IMAP_OK_COMPLETED;
+    r = IMAP_OK_COMPLETED;
+
+  done:
+    mboxlist_entry_free(&mbentry);
+    return r;
 }
 
 // we need to pass mbox so we can keep it open until the file has been used
