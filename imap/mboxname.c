@@ -279,11 +279,13 @@ static void _mbdirty(mbname_t *mbname)
 {
     free(mbname->userid);
     free(mbname->intname);
+    free(mbname->stdname);
     free(mbname->extname);
     free(mbname->recipient);
 
     mbname->userid = NULL;
     mbname->intname = NULL;
+    mbname->stdname = NULL;
     mbname->extname = NULL;
     mbname->recipient = NULL;
 }
