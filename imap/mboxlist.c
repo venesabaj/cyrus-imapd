@@ -1223,7 +1223,7 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
 
                 syslog(LOG_NOTICE,
                        "mboxlist: deleting intermediate with no children: %s (%s)",
-                       mboxname, mbentry->uniqueid);
+                       mbname_stdname(mbname), mbentry->uniqueid);
                 r = mboxlist_update_entry(mboxname, newmbentry, NULL);
                 mboxlist_entry_free(&newmbentry);
                 if (r) goto out;
@@ -1257,7 +1257,7 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
 
         syslog(LOG_NOTICE,
                "mboxlist: creating intermediate with children: %s (%s)",
-               mboxname, newmbentry->uniqueid);
+               mbname_stdname(mbname), newmbentry->uniqueid);
         r = mboxlist_update_entry(mboxname, newmbentry, NULL);
         mboxlist_entry_free(&newmbentry);
         if (r) goto out;
