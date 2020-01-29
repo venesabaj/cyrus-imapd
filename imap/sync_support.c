@@ -3274,12 +3274,7 @@ static int user_meta(const char *userid, struct protstream *pout)
 
 int sync_get_meta(struct dlist *kin, struct sync_state *sstate)
 {
-    char *userid = mboxname_from_standard(kin->sval);
-
-    int r = user_meta(userid, sstate->pout);
-    free(userid);
-
-    return r;
+    return user_meta(kin->sval, sstate->pout);
 }
 
 int sync_get_user(struct dlist *kin, struct sync_state *sstate)
@@ -3287,7 +3282,7 @@ int sync_get_user(struct dlist *kin, struct sync_state *sstate)
     int r;
     struct sync_name_list *quotaroots;
     struct sync_name *qr;
-    char *userid = mboxname_from_standard(kin->sval);
+    const char *userid = kin->sval;
     struct mbox_rock mrock;
 
     quotaroots = sync_name_list_create();
@@ -3309,7 +3304,6 @@ int sync_get_user(struct dlist *kin, struct sync_state *sstate)
 
 bail:
     sync_name_list_free(&quotaroots);
-    free(userid);
     return r;
 }
 
@@ -6458,7 +6452,7 @@ int sync_do_user(const char *userid, const char *topart,
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "USER %s", userid);
 
-    kl = dlist_setname_standard(NULL, "USER", userid);
+    kl = dlist_setatom(NULL, "USER", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 
@@ -6522,7 +6516,7 @@ int sync_do_meta(const char *userid, struct backend *sync_be, unsigned flags)
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "META %s", userid);
 
-    kl = dlist_setname_standard(NULL, "META", userid);
+    kl = dlist_setatom(NULL, "META", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 
