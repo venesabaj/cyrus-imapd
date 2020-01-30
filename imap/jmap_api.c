@@ -3213,7 +3213,7 @@ EXPORTED const mbentry_t *jmap_mbentry_by_uniqueid(jmap_req_t *req, const char *
 
     if (!mbentry) {
         int r = mboxlist_lookup_by_uniqueid(id, &mbentry, NULL);
-        if (mbentry && (r || (mbentry->mbtype & MBTYPE_DELETED))) {
+        if (r || !mbentry || (mbentry->mbtype & MBTYPE_DELETED)) {
             mboxlist_entry_free(&mbentry);
             return NULL;
         }
