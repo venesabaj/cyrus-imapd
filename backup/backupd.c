@@ -1438,14 +1438,11 @@ static int cmd_get_meta(struct dlist *dl)
 {
     struct open_backup *open = NULL;
     mbname_t *mbname = NULL;
-    char *userid;
     int r;
 
     if (!dl->sval) return IMAP_PROTOCOL_BAD_PARAMETERS;
 
-    userid = mboxname_from_standard(dl->sval);
-    mbname = mbname_from_userid(userid);
-    free(userid);
+    mbname = mbname_from_userid(dl->sval);
     if (!mbname) return IMAP_INTERNAL;
 
     r = backupd_open_backup(&open, mbname);
@@ -1505,9 +1502,7 @@ static void cmd_get(struct dlist *dl)
         struct open_backup *open = NULL;
 
         if (dl->sval) {
-            char *userid = mboxname_from_standard(dl->sval);
-            mbname = mbname_from_userid(userid);
-            free(userid);
+            mbname = mbname_from_userid(dl->sval);
             r = backupd_open_backup(&open, mbname);
             if (r) goto done;
 
