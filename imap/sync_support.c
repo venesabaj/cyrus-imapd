@@ -6456,7 +6456,7 @@ int sync_do_user(const char *userid, const char *topart,
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "USER %s", userid);
 
-    kl = dlist_setname_standard(NULL, "USER", userid);
+    kl = dlist_setatom(NULL, "USER", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 
@@ -6520,7 +6520,7 @@ int sync_do_meta(const char *userid, struct backend *sync_be, unsigned flags)
     if (flags & SYNC_FLAG_LOGGING)
         syslog(LOG_INFO, "META %s", userid);
 
-    kl = dlist_setname_standard(NULL, "META", userid);
+    kl = dlist_setatom(NULL, "META", userid);
     sync_send_lookup(kl, sync_be->out);
     dlist_free(&kl);
 
