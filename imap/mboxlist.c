@@ -89,7 +89,7 @@
 
 #define KEY_TYPE_NAME 'N'
 #define KEY_TYPE_ID   'I'
-#define KEY_TYPE_RACL 'R'
+#define KEY_TYPE_ACL  'A'
 
 cyrus_acl_canonproc_t mboxlist_ensureOwnerRights;
 
@@ -842,7 +842,7 @@ static void mboxlist_racl_key(int isuser, const char *keyuser,
                               const char *mbname, struct buf *buf)
 {
     buf_reset(buf);
-    buf_putc(buf, KEY_TYPE_RACL);
+    buf_putc(buf, KEY_TYPE_ACL);
     if (keyuser || mbname) {
         buf_putc(buf, isuser ? 'U' : 'S');
         buf_putc(buf, '$');
