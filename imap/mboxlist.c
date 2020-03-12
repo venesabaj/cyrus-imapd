@@ -1415,6 +1415,7 @@ EXPORTED int mboxlist_update_intermediaries(const char *frommboxname,
                                                  mbtype, 1 /* dofolder */);
 
                 mbentry_t *newmbentry = mboxlist_entry_copy(mbentry);
+                newmbentry->mbtype &= ~MBTYPE_INTERMEDIATE;
                 newmbentry->mbtype |= MBTYPE_DELETED;
                 newmbentry->foldermodseq = modseq;
 
