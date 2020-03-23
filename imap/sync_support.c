@@ -2365,17 +2365,6 @@ redo:
     mailbox_close(&mailbox);
 }
 
-static int dlist_getname_internal(struct dlist *parent, const char *name,
-                                  char **mboxnamep)
-{
-    const char *stdname;
-
-    if (!dlist_getatom(parent, name, &stdname)) return 0;
-
-    *mboxnamep = mboxname_from_standard(stdname);
-    return 1;
-}
-
 int sync_apply_reserve(struct dlist *kl,
                        struct sync_reserve_list *reserve_list,
                        struct sync_state *sstate)
