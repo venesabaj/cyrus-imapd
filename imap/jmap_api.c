@@ -1180,24 +1180,36 @@ static int findblob_cb(const conv_guidrec_t *rec, void *rock)
 {
     struct findblob_data *d = (struct findblob_data*) rock;
     jmap_req_t *req = d->req;
+    mbentry_t *mbentry = NULL;
     int r = 0;
+
+    r = mboxlist_lookup_by_uniqueid(rec->mboxid, &mbentry, NULL);
+    if (r) {
+        syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxid);
+        return r;
+    }
+
+    /* Ignore blobs that don't belong to the current accountId */
+    mbname_t *mbname = mbname_from_intname(mbentry->name);
+    int is_accountid_mbox =
+        (mbname && !strcmp(mbname_userid(mbname), d->from_accountid));
+    mbname_free(&mbname);
+    if (!is_accountid_mbox) {
+        mboxlist_entry_free(&mbentry);
+        return 0;
+    }
 
     /* Check ACL */
     if (d->is_shared_account) {
-        mbentry_t *mbentry = NULL;
-        r = mboxlist_lookup(rec->mboxname, &mbentry, NULL);
-        if (r) {
-            syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxname);
-            return r;
-        }
         int rights = jmap_myrights_mbentry(req, mbentry);
-        mboxlist_entry_free(&mbentry);
         if ((rights & JACL_READITEMS) != JACL_READITEMS) {
+            mboxlist_entry_free(&mbentry);
             return 0;
         }
     }
 
-    r = jmap_openmbox(req, rec->mboxname, &d->mbox, 0);
+    r = jmap_openmbox(req, mbentry->name, &d->mbox, 0);
+    mboxlist_entry_free(&mbentry);
     if (r) return r;
 
     r = msgrecord_find(d->mbox, rec->uid, &d->mr);
@@ -1329,9 +1341,9 @@ static int findblob_exact_cb(const conv_guidrec_t *rec, void *rock)
     /* Check ACL */
     if (d->is_shared_account) {
         mbentry_t *mbentry = NULL;
-        r = mboxlist_lookup(rec->mboxname, &mbentry, NULL);
+        r = mboxlist_lookup_by_uniqueid(rec->mboxid, &mbentry, NULL);
         if (r) {
-            syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxname);
+            syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxid);
             return r;
         }
         int rights = jmap_myrights_mbentry(req, mbentry);
@@ -1341,7 +1353,7 @@ static int findblob_exact_cb(const conv_guidrec_t *rec, void *rock)
         }
     }
 
-    r = jmap_openmbox(req, rec->mboxname, &d->mbox, 0);
+    r = jmap_openmbox_by_uniqueid(req, rec->mboxid, &d->mbox, 0);
     if (r) return r;
 
     r = msgrecord_find(d->mbox, rec->uid, &d->mr);
