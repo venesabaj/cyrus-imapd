@@ -1461,7 +1461,7 @@ static int _email_find_cb(const conv_guidrec_t *rec, void *rock)
     if (r) {
         // we want to keep looking and see if we can find a mailbox we can open
         syslog(LOG_ERR, "IOERROR: email_find_cb failed to open %s: %s",
-               rec->mboxid, error_message(r));
+               rec->mailbox, error_message(r));
         goto done;
     }
 
@@ -1557,7 +1557,7 @@ static int _email_get_cid_cb(const conv_guidrec_t *rec, void *rock)
 
     mboxlist_lookup_by_guidrec(rec, &mbentry, NULL);
 
-    if (!mbentry || mbtype_isa(mbtype) != MBTYPE_EMAIL) {
+    if (!mbentry || mbtype_isa(mbentry->mbtype) != MBTYPE_EMAIL) {
         mboxlist_entry_free(&mbentry);
         return 0;
     }
