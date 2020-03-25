@@ -2347,7 +2347,7 @@ static int _read_emailcounts_cb(const conv_guidrec_t *rec, void *rock)
     struct emailcountitems *i = ecounts->ispost ? &ecounts->post : &ecounts->pre;
 
     i->numrecords++;
-    if (rec->foldernum == ecounts->foldernum) i->foldernumrecords++;
+    if (rec->foldernum == (uint32_t) ecounts->foldernum) i->foldernumrecords++;
 
     // the rest only counts non-deleted records
     if (rec->version > 0 &&
@@ -2356,12 +2356,12 @@ static int _read_emailcounts_cb(const conv_guidrec_t *rec, void *rock)
         return 0;
 
     i->exists++;
-    if (rec->foldernum == ecounts->foldernum) i->folderexists++;
+    if (rec->foldernum == (uint32_t) ecounts->foldernum) i->folderexists++;
 
     // not seen or unsure, count it as unseen
     if (rec->version == 0 || !(rec->system_flags & (FLAG_SEEN|FLAG_DRAFT))) {
-        if (rec->foldernum != ecounts->trashfolder) i->unseen++;
-        if (rec->foldernum == ecounts->foldernum) i->folderunseen++;
+        if (rec->foldernum != (uint32_t) ecounts->trashfolder) i->unseen++;
+        if (rec->foldernum == (uint32_t) ecounts->foldernum) i->folderunseen++;
     }
 
     return 0;
