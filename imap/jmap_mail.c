@@ -1461,7 +1461,7 @@ static int _email_find_cb(const conv_guidrec_t *rec, void *rock)
     if (r) {
         // we want to keep looking and see if we can find a mailbox we can open
         syslog(LOG_ERR, "IOERROR: email_find_cb failed to open %s: %s",
-               rec->mailbox, error_message(r));
+               mbentry->name, error_message(r));
         goto done;
     }
 
@@ -1604,17 +1604,13 @@ static int _email_is_expunged_cb(const conv_guidrec_t *rec, void *rock)
     struct email_expunge_check *check = rock;
     msgrecord_t *mr = NULL;
     struct mailbox *mbox = NULL;
-    mbentry_t *mbentry = NULL;
     uint32_t flags;
     int r = 0;
 
     if (rec->part) return 0;
 
-    r = mboxlist_lookup_by_guidrec(rec, &mbentry, NULL);
-    if (r) goto done;
-
-    r = jmap_openmbox(check->req, mbentry->name, &mbox, 0);
-    if (r) goto done;
+    r = jmap_openmbox_by_guidrec(check->req, rec, &mbox, 0);
+    if (r) return r;
 
     if (mbox->mbtype == MBTYPE_EMAIL) {
         r = msgrecord_find(mbox, rec->uid, &mr);
@@ -1635,10 +1631,8 @@ static int _email_is_expunged_cb(const conv_guidrec_t *rec, void *rock)
         }
     }
 
- done:
     jmap_closembox(check->req, &mbox);
-    mboxlist_entry_free(&mbentry);
-    return r;
+    return 0;
 }
 
 static void _email_search_perf_attr(const search_attr_t *attr, strarray_t *perf_filters)
