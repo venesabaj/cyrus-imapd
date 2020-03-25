@@ -2628,8 +2628,8 @@ EXPORTED int conversation_update(struct conversations_state *state,
 
     for (folder = conv->folders; folder; folder = folder->next) {
         conv_status_t status;
-        const char *mboxname = strarray_nth(state->folder_names, folder->number);
-        int r = conversation_getstatus(state, mboxname, &status);
+        const char *mailbox = strarray_nth(state->folders, folder->number);
+        int r = conversation_getstatus(state, mailbox, &status);
         if (r) return r;
 
         int dirty = 0;
@@ -2680,7 +2680,7 @@ EXPORTED int conversation_update(struct conversations_state *state,
         }
 
         if (dirty) {
-            r = conversation_setstatus(state, mboxname, &status);
+            r = conversation_setstatus(state, mailbox, &status);
             if (r) return r;
         }
     }
