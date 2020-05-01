@@ -119,7 +119,7 @@ int actions_setuser(const char *userid)
       buf_appendcstr(&buf, "/global");
   }
   else {
-      buf_setcstr(&buf, user_sieve_path(userid);
+      buf_setcstr(&buf, user_sieve_path(userid));
   }
 
   const char *sieve_dir = buf_cstring(&buf);
