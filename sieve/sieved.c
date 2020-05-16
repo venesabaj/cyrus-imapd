@@ -1454,6 +1454,7 @@ static int generate_block(bytecode_input_t *bc, int pos, int end,
             break;
 
         case B_NOTIFY:
+            /* XXX  Translate this into enotify compatible */
             *requires |= SIEVE_CAPA_NOTIFY;
             generate_token("notify", indent, buf);
             generate_string(":method", cmd.u.n.method, buf);
