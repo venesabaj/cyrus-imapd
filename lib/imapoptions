@@ -1210,6 +1210,9 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* If enabled, support non-standard JMAP extensions.  If not enabled,
    only IETF standard JMAP functionality is supported. */
 
+{ "jmap_relaxedids", 0, SWITCH, "3.3.0" }
+/* If enabled, allow invalid characters in JMAP ids */
+
 { "jmap_set_has_attachment", 1, SWITCH, "3.1.5" }
 /* If enabled, the $hasAttachment flag is determined and set for new messages
    created with the JMAP Email/set or Email/import methods. This option should
