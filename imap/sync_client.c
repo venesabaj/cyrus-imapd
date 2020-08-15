@@ -107,6 +107,7 @@ static unsigned flags      = 0;
 static int verbose         = 0;
 static int verbose_logging = 0;
 static int connect_once    = 0;
+static int sync_once       = 0;
 static int background      = 0;
 static int do_compress     = 0;
 static int no_copyback     = 0;
@@ -725,7 +726,7 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
         }
 
         /* See if its time to RESTART */
-        if ((timeout > 0) &&
+        if ((timeout > 0) && !sync_once &&
             ((single_start - session_start) > (time_t) timeout)) {
             *restartp = RESTART_NORMAL;
             break;
@@ -733,6 +734,10 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
 
         r = sync_log_reader_begin(slr);
         if (r) {
+            if (sync_once) {
+                if (r == IMAP_AGAIN) r = 0;
+                break;
+            }
             /* including specifically r == IMAP_AGAIN */
             if (min_delta > 0) {
                 sleep(min_delta);
@@ -753,6 +758,9 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
         r = sync_log_reader_end(slr);
         if (r) break;
 
+        // if we're only ever supposed to process the file once, break now
+        if (sync_once) break;
+
         delta = time(NULL) - single_start;
 
         if (((unsigned) delta < min_delta) && ((min_delta-delta) > 0))
@@ -760,7 +768,7 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
     }
     sync_log_reader_free(slr);
 
-    if (*restartp == RESTART_NORMAL) {
+    if (*restartp == RESTART_NORMAL && !sync_once) {
         r = do_restart();
         if (r) {
             syslog(LOG_ERR, "sync_client RESTART failed: %s",
@@ -897,7 +905,7 @@ static void do_daemon(const char *channel, const char *sync_shutdown_file,
         replica_connect(channel);
         r = do_daemon_work(channel, sync_shutdown_file,
                            timeout, min_delta, &restart);
-        if (r) {
+        if (r && !sync_once) {
             /* See if we're still connected to the server.
              * If we are, we had some type of error, so we exit.
              * Otherwise, try reconnecting.
@@ -1003,7 +1011,7 @@ int main(int argc, char **argv)
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRumsozOAp:")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRumsozOAp:X")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -1074,6 +1082,10 @@ int main(int argc, char **argv)
             if (mode != MODE_UNKNOWN)
                 usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_USER;
+            break;
+
+        case 'X':  // yes, this is a horrible letter, but we're fresh out of 'o'
+            sync_once = 1;
             break;
 
         case 'm':
