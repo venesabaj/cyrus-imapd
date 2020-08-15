@@ -89,6 +89,7 @@
 #include "prometheus.h"
 #include "prot.h"
 #include "proxy.h"
+#include "sync_log.h"
 #include "telemetry.h"
 #include "times.h"
 #include "tls.h"
@@ -951,6 +952,9 @@ int deliver(message_data_t *msgdata, char *authuser,
     append_removestage(stage);
     stage = NULL;
     if (notifyheader) free(notifyheader);
+
+    // checkpoint the replication before we return to reply to the client
+    sync_log_checkpoint();
 
     return 0;
 }
